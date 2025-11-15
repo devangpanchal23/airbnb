@@ -1,0 +1,8 @@
+    <ul>
+        <% for(let Listing of allListing){ %>
+            <li>
+                <a href="/Listings/<%= Listing._id %>"><%= Listing.title %></a>
+            </li>
+            <br />
+        <% } %>
+    </ul>
