@@ -4,13 +4,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WaderLust</title>
+    <title>WanderLust</title>
+
     <style>
-        .link {
-            text-decoration: none;
+        h3 {
+            margin-bottom: 20px;
+            font-weight: 600;
         }
-        .endBtnStyle{
-            margin-bottom: 12px;
+
+        .listing-container {
+            max-width: 500px;
+            margin: auto;
+        }
+
+        .listing-card {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0px 3px 10px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+        }
+
+        .listing-card img {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+            font-size: 1.1rem;
+        }
+
+        ul li {
+            margin-bottom: 8px;
+        }
+
+        .btn-box {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-box button {
+            padding: 8px 14px;
+        }
+
+        .link {
+            color: white;
+            text-decoration: none;
         }
     </style>
 </head>
@@ -18,26 +61,32 @@
 <body>
     <% layout("/layouts/boilerplate") %>
 
-    <h3>Listing Details </h3>
-    <ul>
-        <li>Title:- <%= listing.title%>
-        </li>
-        <li>Description:- <%= listing.description%>
-        </li>
-        <li>Price:- ₹&nbsp;<%= listing.price.toLocaleString("en-in")%>
-        </li>
-        <li>Location:-<%= listing.location%>
-        </li>
-        <li>Country:- <%= listing.country%>
-        </li>
-    </ul>
-    <div class="endBtnStyle">
-        <button><a class="link" href="/listings/<%= listing._id %>/edit">Edit this list</a></button>
-        <br />
+    <div class="listing-container">
+        <h3>Listing Details</h3>
+
+        <div class="listing-card">
+            <img src="<%= listing.image.url %>" alt="Listing Image">
+        </div>
+
+        <ul>
+            <li><b>Title:</b> <%= listing.title %></li>
+            <li><b>Description:</b> <%= listing.description %></li>
+            <li><b>Price:</b> ₹ <%= listing.price.toLocaleString("en-IN") %></li>
+            <li><b>Location:</b> <%= listing.location %></li>
+            <li><b>Country:</b> <%= listing.country %></li>
+        </ul>
+
+        <div class="btn-box">
+            <button class="btn btn-success">
+                <a class="link" href="/listings/<%= listing._id %>/edit">Edit</a>
+            </button>
+
+            <form method="post" action="/listings/<%= listing._id %>?_method=DELETE">
+                <button class="btn btn-danger">Delete</button>
+            </form>
+        </div>
     </div>
-    <form method="post" action="/listings/<%= listing._id %>?_method=DELETE">
-        <button>Delete this listing</button>
-    </form>
+
 </body>
 
 </html>
