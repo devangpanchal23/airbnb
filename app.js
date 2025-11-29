@@ -77,11 +77,22 @@ app.get("/listings/:id/edit",async (req,res) => {
 })
 
 //Update route
-app.put("/listings/:id", async (req,res) => {
-  const {id} = req.params;
-  await Listing.findByIdAndUpdate(id, {...req.body.listing});
-  res.redirect(`/listings/${id}`);
-})
+app.put("/listings/:id", async (req, res) => {
+    const { id } = req.params;
+
+    // Fetch old listing
+    const oldListing = await Listing.findById(id);
+
+    // Merge updated fields
+    const updatedData = { ...req.body.listing };
+
+    // 🔥 Keep the old image if user didn't update it
+    updatedData.image = oldListing.image;
+
+    await Listing.findByIdAndUpdate(id, updatedData);
+    res.redirect(`/listings/${id}`);
+});
+
 
 //delete route
 app.delete("/listings/:id", async (req,res) => {
