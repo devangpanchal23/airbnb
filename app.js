@@ -10,8 +10,12 @@ const ejsMate = require("ejs-mate");
 const wrapAsync = require("./utils/wrapAsync.js");
 const ExpressError = require("./utils/ExpressError.js");
 
+const { listingSchema } = require("./schema.js");
+
 // Middleware
 app.use(express.urlencoded({ extended: true }));
+// Parse JSON bodies (for API clients like Hoppscotch)
+app.use(express.json());
 
 // View engine setup
 app.set("view engine", "ejs");
@@ -39,6 +43,23 @@ async function main() {
 }
 main();
 
+const validateListing = (req, res, next) => {
+  // Normalize payload so validation always expects `{ listing: { ... } }`.
+  const payload = req.body && req.body.listing ? req.body : { listing: req.body };
+  // Allow Joi to convert types (strings -> numbers) where possible
+  const { error, value } = listingSchema.validate(payload, { convert: true });
+  if (error) {
+    const msg = error.details.map((el) => el.message).join(",");
+    throw new ExpressError(400, msg);
+  }
+  // Ensure `req.body.listing` exists and coerce price to Number
+  req.body.listing = value.listing;
+  if (req.body.listing && req.body.listing.price != null) {
+    req.body.listing.price = Number(req.body.listing.price);
+  }
+  next();
+};
+
 // Routes
 app.get("/", (req, res) => {
   res.send("Home page");
@@ -50,56 +71,61 @@ app.get("/listings/new", (req, res) => {
 });
 
 // Fetch all listings
-app.get("/listings", wrapAsync(async (req, res) => {      
+app.get(
+  "/listings",
+  wrapAsync(async (req, res) => {
     const allListing = await Listing.find();
     res.render("listings/index.ejs", { allListing });
-  }
-));
+  })
+);
 
 // //create listing
-app.post("/listings", wrapAsync (async (req, res) => {
-  // let {title, description, price, image,counrty,location} = req.body;
-  // let listing = req.body;
-  if (!req.body.listing){
-    throw new ExpressError(400, "Send valid data for listing");
-  }
+app.post(
+  "/listings",
+  validateListing,
+  wrapAsync(async (req, res) => {
     const newListing = new Listing(req.body.listing);
     await newListing.save();
-    console.log(newListing);
     res.redirect("/listings");
-}));
+  })
+);
 
 //edit route
-app.get("/listings/:id/edit", wrapAsync(async (req, res) => {
-  const { id } = req.params;
-  const listing = await Listing.findById(id);
-  res.render("listings/edit.ejs", { listing });
-}));
+app.get(
+  "/listings/:id/edit",
+  wrapAsync(async (req, res) => {
+    const { id } = req.params;
+    const listing = await Listing.findById(id);
+    res.render("listings/edit.ejs", { listing });
+  })
+);
 
 //Update route
-app.put("/listings/:id",wrapAsync( async (req, res) => {
-  const { id } = req.params;
-
-  // Fetch old listing
-  const oldListing = await Listing.findById(id);
-
-  // Merge updated fields
-  const updatedData = { ...req.body.listing };
-
-  // 🔥 Keep the old image if user didn't update it
-  updatedData.image = oldListing.image;
-
-  await Listing.findByIdAndUpdate(id, updatedData);
-  res.redirect(`/listings/${id}`);
-}));
+app.put(
+  "/listings/:id", validateListing,
+  wrapAsync(async (req, res) => {
+    const { id } = req.params;
+    // Fetch old listing
+    const oldListing = await Listing.findById(id);
+    // Merge updated fields
+    const updatedData = { ...req.body.listing };
+    // 🔥 Keep the old image if user didn't update it
+    updatedData.image = oldListing.image;  
+    await Listing.findByIdAndUpdate(id, updatedData);
+    res.redirect(`/listings/${id}`);
+  })
+);
 
 //delete route
-app.delete("/listings/:id",  wrapAsync(async (req, res) => {
-  const { id } = req.params;
-  const deletedList = await Listing.findByIdAndDelete(id);
-  console.log(deletedList);
-  res.redirect("/listings");
-}));
+app.delete(
+  "/listings/:id",
+  wrapAsync(async (req, res) => {
+    const { id } = req.params;
+    const deletedList = await Listing.findByIdAndDelete(id);
+    console.log(deletedList);
+    res.redirect("/listings");
+  })
+);
 
 // Fetch single listing
 app.get("/listings/:id", async (req, res) => {
@@ -118,6 +144,6 @@ app.all("*", (req, res, next) => {
 });
 
 app.use((err, req, res, next) => {
-  let {statusCode=500 , message="Something went wrong" } = err;
+  let { statusCode = 500, message = "Something went wrong" } = err;
   res.status(statusCode).send(message);
 });

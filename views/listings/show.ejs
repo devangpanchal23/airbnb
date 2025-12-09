@@ -71,7 +71,7 @@
         <ul>
             <li><b>Title:</b> <%= listing.title %></li>
             <li><b>Description:</b> <%= listing.description %></li>
-            <li><b>Price:</b> ₹ <%= listing.price.toLocaleString("en-IN") %></li>
+            <li><b>Price:</b> ₹ <%= (listing.price != null) ? Number(listing.price).toLocaleString("en-IN") : "N/A" %></li>
             <li><b>Location:</b> <%= listing.location %></li>
             <li><b>Country:</b> <%= listing.country %></li>
         </ul>

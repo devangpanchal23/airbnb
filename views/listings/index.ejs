@@ -95,7 +95,7 @@
                 </p>
 
                 <p class="listing-price">
-                    ₹ <%= Listing.price.toLocaleString("en-IN") %>
+                    ₹ <%= (Listing.price != null) ? Number(Listing.price).toLocaleString("en-IN") : "N/A" %>
                 </p>
             </div>
         </div>
